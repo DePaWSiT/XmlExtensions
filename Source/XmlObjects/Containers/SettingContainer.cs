@@ -75,6 +75,7 @@ namespace XmlExtensions.Setting
         private float cachedHeight = -1f;
         private float errHeight = -1;
         private string defaultKey;
+        private string errMessage = "";
         
         
 
@@ -187,8 +188,7 @@ namespace XmlExtensions.Setting
                     if (errHeight > 0)
                     {
                         GUI.color = Color.red;
-                        Widgets.Label(inRect, "Error drawing setting: " + GetType().ToString().Split('.')[GetType().ToString().Split('.').Length - 1]);
-                        errHeight = 22;
+                        Widgets.Label(inRect, errMessage);
                         GUI.color = Color.white;
                     }
                     else
@@ -244,11 +244,12 @@ namespace XmlExtensions.Setting
                         postDrawRect = drawRect;
                     }
                 }
-                catch
+                catch (Exception e)
                 {
                     GUI.color = Color.red;
-                    Widgets.Label(inRect, "Error drawing setting: " + GetType().ToString().Split('.')[GetType().ToString().Split('.').Length - 1]);
-                    errHeight = 22;
+                    errMessage = "Error drawing Setting." + GetType().ToString().Split('.')[GetType().ToString().Split('.').Length - 1] + ": " + e.Message;
+                    errHeight = Verse.Text.CalcHeight(errMessage, inRect.width);
+                    Widgets.Label(inRect, errMessage);
                     GUI.color = Color.white;
                 }
             }

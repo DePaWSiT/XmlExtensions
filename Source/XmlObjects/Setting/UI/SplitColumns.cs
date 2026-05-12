@@ -30,6 +30,16 @@ namespace XmlExtensions.Setting
         private List<float> rowHeights = [];
         private List<float> colPads = [];
 
+        private Anchor GetAnchor(int index)
+        {
+            if (anchors != null && index < anchors.Count)
+            {
+                return anchors[index];
+            }
+
+            return Anchor.Top;
+        }
+
         protected override bool Init()
         {
             addDefaultSpacing = false;
@@ -39,7 +49,7 @@ namespace XmlExtensions.Setting
                 int alignedCount = 0;
                 for (int i = 0; i < anchors.Count; i++)
                 {
-                    if (anchors[i] == Anchor.Aligned)
+                    if (GetAnchor(i) == Anchor.Aligned)
                         alignedCount++;
                 }
 
@@ -98,7 +108,7 @@ namespace XmlExtensions.Setting
                     float maxRowHeight = 0f;
                     for (int col = 0; col < settings.Count; col++)
                     {
-                        if (anchors[col] == Anchor.Aligned && row < (settings[col]?.Count ?? 0))
+                        if (GetAnchor(col) == Anchor.Aligned && row < (settings[col]?.Count ?? 0))
                         {
                             float h = settings[col][row].GetHeight(columnWidths[col]);
                             maxRowHeight = Math.Max(maxRowHeight, h);
@@ -111,7 +121,7 @@ namespace XmlExtensions.Setting
                 for (int col = 0; col < settings.Count; col++)
                 {
                     float totalColHeight = 0f;
-                    if (anchors[col] == Anchor.Aligned)
+                    if (GetAnchor(col) == Anchor.Aligned)
                     {
                         for (int row = 0; row < rowHeights.Count; row++)
                         {
@@ -135,7 +145,7 @@ namespace XmlExtensions.Setting
                     float pad = colPads[col];
                     float rawHeight = cachedHeights[col];
 
-                    if (anchors[col] == Anchor.Bottom)
+                    if (GetAnchor(col) == Anchor.Bottom)
                         totalHeight = Math.Max(totalHeight, rawHeight + pad);
                     else
                         totalHeight = Math.Max(totalHeight, rawHeight);
@@ -177,7 +187,7 @@ namespace XmlExtensions.Setting
                     float w = columnWidths[col];
                     float pad = colPads[col];
 
-                    if (anchors[col] == Anchor.Aligned)
+                    if (GetAnchor(col) == Anchor.Aligned)
                     {
                         float y = inRect.y + pad;
                         for (int row = 0; row < maxRows; row++)
@@ -196,8 +206,8 @@ namespace XmlExtensions.Setting
                     else
                     {
                         float h = cachedHeights[col];
-                        float yOffset = GetYOffset(anchors[col], totalHeight, h);
-                        if (anchors[col] == Anchor.Bottom)
+                        float yOffset = GetYOffset(GetAnchor(col), totalHeight, h);
+                        if (GetAnchor(col)  == Anchor.Bottom)
                             yOffset += pad;
 
                         Rect r = new Rect(x, inRect.y + yOffset, w, h);
@@ -226,7 +236,7 @@ namespace XmlExtensions.Setting
                 float w = columnWidths[col];
                 float h = cachedHeights[col];
                 float pad = colPads[col];
-                Anchor anchor = anchors[col];
+                Anchor anchor = GetAnchor(col);
 
                 float yOffset = GetYOffset(anchor, totalHeight, h);
                 if (anchor == Anchor.Bottom)
