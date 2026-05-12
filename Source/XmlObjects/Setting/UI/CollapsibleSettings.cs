@@ -27,6 +27,16 @@ namespace XmlExtensions.Setting
         private float labelPadding = 0f;
         private float buttonSize = 0f;
         private State state = State.Closed;
+        private static Texture2D revealOpenTexture;
+
+        private static Texture2D RevealOpenTexture
+        {
+            get
+            {
+                revealOpenTexture ??= RotatedClockwise(TexButton.Reveal);
+                return revealOpenTexture;
+            }
+        }
 
         protected override bool Init()
         {
@@ -88,8 +98,7 @@ namespace XmlExtensions.Setting
                 Widgets.Label(headerRectInner, label.TranslateIfTKeyAvailable(tKey));
                 Verse.Text.Anchor = TextAnchor.UpperLeft;
             }
-            if (state == State.Open) { Widgets.DrawTextureRotated(buttonRect, TexButton.Reveal, 90); }
-            else { GUI.DrawTexture(buttonRect, TexButton.Reveal); }
+            DrawRevealIcon(buttonRect, state == State.Open);
 
             Verse.Text.Font = GameFont.Small;
 
@@ -102,6 +111,58 @@ namespace XmlExtensions.Setting
 
             // Draw settings
             if (state == State.Open) { DrawSettingsList(inRect.TrimTopPartPixels(headerHeight), settings); }
+        }
+        
+
+        
+
+        private static void DrawRevealIcon(Rect rect, bool open)
+        {
+            GUI.DrawTexture(rect, open ? RevealOpenTexture : TexButton.Reveal);
+        }
+
+        private static Texture2D RotatedClockwise(Texture texture)
+        {
+            RenderTexture previous = RenderTexture.active;
+
+            RenderTexture rt = RenderTexture.GetTemporary(
+                texture.width,
+                texture.height,
+                0,
+                RenderTextureFormat.ARGB32
+            );
+
+            Graphics.Blit(texture, rt);
+            RenderTexture.active = rt;
+
+            Texture2D source = new Texture2D(texture.width, texture.height, TextureFormat.ARGB32, false);
+            source.ReadPixels(new Rect(0f, 0f, texture.width, texture.height), 0, 0);
+            source.Apply();
+
+            RenderTexture.active = previous;
+            RenderTexture.ReleaseTemporary(rt);
+
+            Texture2D rotated = new Texture2D(source.height, source.width, TextureFormat.ARGB32, false);
+
+            Color[] pixels = source.GetPixels();
+            Color[] rotatedPixels = new Color[pixels.Length];
+
+            int width = source.width;
+            int height = source.height;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    rotatedPixels[(width - x - 1) * height + y] = pixels[y * width + x];
+                }
+            }
+
+            rotated.SetPixels(rotatedPixels);
+            rotated.Apply();
+
+            Object.Destroy(source);
+            return rotated;
         }
 
         protected override void DrawFilterBox(Rect inRect)
