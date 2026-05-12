@@ -12,29 +12,53 @@ namespace XmlExtensions.Setting
 
         protected override float CalculateHeight(float width)
         {
-            return (label == null ? 0 : 22) + 22;
+            float height = 0f;
+
+            if (label != null)
+            {
+                height += 22f;
+            }
+
+            height += SliderHeight();
+
+            return height;
+        }
+
+        private static float SliderHeight()
+        {
+            if (Prefs.UIScale > 1f && Math.Abs(Prefs.UIScale / 2f - Mathf.Floor(Prefs.UIScale / 2f)) > float.Epsilon)
+            {
+                return 24f;
+            }
+
+            return 22f;
         }
 
         protected override void DrawSettingContents(Rect inRect)
         {
-            Color color = GUI.color;
-            Listing_Standard listingStandard = new Listing_Standard();
-            listingStandard.verticalSpacing = 0;
-            listingStandard.Begin(inRect);
             float currFloat = float.Parse(SettingsManager.GetSetting(modId, key));
-            float newFloat;
+            float y = inRect.y;
+
             if (label != null)
             {
-                string substiteLegacy = label.TranslateIfTKeyAvailable(tKey).SubstituteVariable(key, currFloat.ToString());
-                string substiteDefaultValue = substiteLegacy;
-                if (substiteLegacy.Contains("{defaultValue}"))
-                    substiteDefaultValue = substiteLegacy.SubstituteVariable("defaultValue", SettingsManager.GetDefaultValue(modId, key));
-                listingStandard.Label(substiteDefaultValue.SubstituteVariable("key", currFloat.ToString()));
+                Rect labelRect = new Rect(inRect.x, y, inRect.width, 22f);
+
+                string substituted = label.TranslateIfTKeyAvailable(tKey)
+                    .SubstituteVariable(key, currFloat.ToString());
+
+                if (substituted.Contains("{defaultValue}"))
+                {
+                    substituted = substituted.SubstituteVariable("defaultValue", SettingsManager.GetDefaultValue(modId, key));
+                }
+
+                Widgets.Label(labelRect, substituted.SubstituteVariable("key", currFloat.ToString()));
+                y += 22f;
             }
-            newFloat = listingStandard.Slider(currFloat, min, max);
-            listingStandard.End();
+
+            Rect sliderRect = new Rect(inRect.x, y, inRect.width, SliderHeight());
+            float newFloat = Widgets.HorizontalSlider(sliderRect, currFloat, min, max);
+
             SettingsManager.SetSetting(modId, key, Math.Round(newFloat, decimals).ToString());
-            GUI.color = color;
         }
     }
 }

@@ -35,28 +35,29 @@ namespace XmlExtensions.Setting
             string str = text.TranslateIfTKeyAvailable(tKey);
             cachedText = SubstituteVariables(str);
 
-            // Workaround for Unity UI scaling bug
-            float num = Prefs.UIScale / 2f;
-            if (Prefs.UIScale > 1f && Math.Abs(num - Mathf.Floor(num)) > float.Epsilon)
+            float rawHeight = Verse.Text.CalcHeight(cachedText, width);
+
+            if (IsFractionalUIScale())
             {
-                float rawHeight = Verse.Text.CalcHeight(str, width);
-                cachedHeight = Mathf.Ceil(rawHeight + 1f); // 1px fudge factor
+                cachedHeight = Mathf.Ceil(rawHeight + 2f);
             }
             else
             {
-                cachedHeight = Verse.Text.CalcHeight(str, width);
+                cachedHeight = Mathf.Ceil(rawHeight);
             }
 
-            if (actions != null)
-            {
-                cachedSize = Verse.Text.CalcSize(str);
-                cachedSize.x = Math.Min(cachedSize.x, width);
-            }
+            cachedSize = Verse.Text.CalcSize(cachedText);
+            cachedSize.x = Math.Min(cachedSize.x, width);
+
             Verse.Text.Font = GameFont.Small;
             Verse.Text.Anchor = TextAnchor.UpperLeft;
-            return cachedHeight;
 
-            
+            return cachedHeight;
+        }
+
+        private static bool IsFractionalUIScale()
+        {
+            return Math.Abs(Prefs.UIScale - Mathf.Round(Prefs.UIScale)) > 0.001f;
         }
 
         protected override void DrawSettingContents(Rect inRect)
@@ -101,7 +102,7 @@ namespace XmlExtensions.Setting
                     }
                 }
             }
-            Rect drawRect = new Rect(inRect.x, inRect.y, inRect.width, Mathf.Ceil(cachedHeight));
+            Rect drawRect = new Rect(inRect.x, inRect.y, inRect.width, inRect.height);
             Widgets.Label(drawRect, cachedText);
             Verse.Text.Font = GameFont.Small;
             Verse.Text.Anchor = TextAnchor.UpperLeft;
