@@ -73,35 +73,44 @@ namespace XmlExtensions.Setting
 
         protected override void DrawFilterBox(Rect inRect)
         {
-            float headerHeight = rows * tabHeight;
-            Rect headerRect = inRect.TopPartPixels(headerHeight);
+            const float maxTabWidth = 200f;
+            const float tabHorizontalOverlap = 10f;
 
-            int totalTabs = tabs.Count;
-            int totalRows = Mathf.Min(rows, totalTabs);
-            int basePerRow = totalTabs / totalRows;
-            int remainder = totalTabs % totalRows;
+            Rect baseRect = inRect;
+            baseRect.yMin += rows * tabHeight;
 
-            int tabIndex = 0;
-            float rowY = headerRect.y;
+            int tabsDrawn = 0;
 
-            for (int r = 0; r < totalRows; r++)
+            for (int r = 0; r < rows; r++)
             {
-                int tabsThisRow = basePerRow + (r < remainder ? 1 : 0);
-                if (tabsThisRow <= 0) break;
+                int tabsThisRow = r == 0
+                    ? tabs.Count - (rows - 1) * Mathf.FloorToInt((float)tabs.Count / rows)
+                    : Mathf.FloorToInt((float)tabs.Count / rows);
 
-                float tabWidth = headerRect.width / tabsThisRow;
-                float colX = headerRect.x;
+                float tabWidth = (baseRect.width + (tabsThisRow - 1) * tabHorizontalOverlap) / tabsThisRow;
+                tabWidth = Mathf.Min(tabWidth, maxTabWidth);
 
-                for (int c = 0; c < tabsThisRow && tabIndex < totalTabs; c++, tabIndex++, colX += tabWidth)
+                float rowY = baseRect.y - tabHeight;
+
+                for (int c = 0; c < tabsThisRow; c++)
                 {
+                    int tabIndex = tabsDrawn + c;
+
                     if (containedFiltered[tabs[tabIndex].settings])
                     {
-                        Rect tabRect = new Rect(colX, rowY, tabWidth, tabHeight);
+                        Rect tabRect = new Rect(
+                            baseRect.x + c * (tabWidth - tabHorizontalOverlap),
+                            rowY,
+                            tabWidth,
+                            tabHeight
+                        );
+
                         FilterBox(tabRect);
                     }
                 }
 
-                rowY += tabHeight;
+                baseRect.yMin += 31f;
+                tabsDrawn += tabsThisRow;
             }
         }
 
